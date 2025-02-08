@@ -14,9 +14,11 @@ load_dotenv()
 ####################
 # Retrieve sensitive information
 ####################
-TOKEN = os.getenv("DISCORD_BOT_DEV_TOKEN")
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:
     raise ValueError("Error: DISCORD_BOT_TOKEN is not set in .env")
+GUILD_ID = int(os.getenv("DISCORD_GUILD_ID")) if os.getenv("DISCORD_GUILD_ID") else None
+WELCOME_CHANNEL_ID = int(os.getenv("DISCORD_WELCOME_CHANNEL_ID")) if os.getenv("DISCORD_WELCOME_CHANNEL_ID") else None
 
 # AMP-related credentials from .env
 AMP_HOST = os.getenv("AMP_HOST", "127.0.0.1")
@@ -35,6 +37,19 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 async def on_ready():
     print(f"🚀 Logged in as {bot.user}")
 
+@bot.event
+async def on_member_join(member):
+    """Sends a welcome message when a user joins the server."""
+    if WELCOME_CHANNEL_ID:
+        channel = bot.get_channel(WELCOME_CHANNEL_ID)
+        if channel:
+            embed = create_embed(
+                title="👋 Welcome!",
+                description=f"Welcome to the server, {member.mention}! We're glad to have you here! 🎉",
+                color=0x00FF00
+            )
+            await channel.send(embed=embed)
+
 ####################
 # Utility: Create an embed
 ####################
@@ -52,9 +67,9 @@ api_params = ampapi.dataclass.APIParams(AMP_HOST, AMP_USERNAME, AMP_PASSWORD)
 bridge: ampapi.Bridge = ampapi.Bridge(api_params=api_params)
 
 ####################
-# Slash command example
+# Slash Ping Command
 ####################
-@bot.slash_command(name="ping", guild_ids=[1337574388928610346], description="Replies with Pong!")
+@bot.slash_command(name="ping", guild_ids=[GUILD_ID], description="Replies with Pong!")
 async def ping_slash(ctx):
     """Slash command that responds with an embedded Pong message."""
     latency_ms = round(bot.latency * 1000)
@@ -68,7 +83,7 @@ async def ping_slash(ctx):
 ####################
 # Server Info Commands
 ####################
-@bot.slash_command(name="discordinfo", guild_ids=[1337574388928610346], description="Displays basic server info.")
+@bot.slash_command(name="discordinfo", guild_ids=[GUILD_ID], description="Displays basic server info.")
 async def serverinfo_slash(ctx):
     """Displays basic server info via slash command."""
     guild = ctx.guild
@@ -92,7 +107,7 @@ async def serverinfo_slash(ctx):
 ####################
 # Custom Help Commands
 ####################
-@bot.slash_command(name="help", guild_ids=[1337574388928610346], description="Show list of available slash commands.")
+@bot.slash_command(name="help", guild_ids=[GUILD_ID], description="Show list of available slash commands.")
 async def help_slash(ctx):
     """Displays a list of available commands (slash-based)."""
     embed = create_embed(
@@ -101,8 +116,8 @@ async def help_slash(ctx):
         color=0x3498DB
     )
     embed.add_field(name="/ping", value="Responds with bot latency.", inline=False)
-    embed.add_field(name="/discordinfo", value="Displays basic server info.", inline=False)
-    embed.add_field(name="/serverinfo", value="Retrieve basic info from Server.", inline=False)
+    embed.add_field(name="/discordinfo", value="Currently shows Discord guild info.", inline=False)
+    embed.add_field(name="/serverinfo", value="Queries AMP for server data (like “uptime” and “state”).", inline=False)
     embed.add_field(name="/instances", value="Show all available instances.", inline=False)
     embed.add_field(name="/start_instance <instance_name>", value="Start a specified instance.", inline=False)
     embed.add_field(name="/stop_instance <instance_name>", value="Stop a specified instance.", inline=False)
@@ -112,7 +127,7 @@ async def help_slash(ctx):
 ####################
 # Basic AMP Command
 ####################
-@bot.slash_command(name="serverinfo", guild_ids=[1337574388928610346], description="Retrieve basic info from AMP.")
+@bot.slash_command(name="serverinfo", guild_ids=[GUILD_ID], description="Retrieve basic info from AMP.")
 async def ampinfo_slash(ctx):
     """Displays the status of the server instance."""
     try:
@@ -147,7 +162,7 @@ async def ampinfo_slash(ctx):
 ####################
 # Command to show all available instances
 ####################
-@bot.slash_command(name="instances", guild_ids=[1337574388928610346], description="Show all available instances.")
+@bot.slash_command(name="instances", guild_ids=[GUILD_ID], description="Show all available instances.")
 async def instances_slash(ctx):
     """Displays a list of available instances in the Server."""
     try:
@@ -189,7 +204,7 @@ async def instances_slash(ctx):
 ####################
 # Command to start an instance with error handling
 ####################
-@bot.slash_command(name="start_instance", guild_ids=[1337574388928610346], description="Start a specified instance.")
+@bot.slash_command(name="start_instance", guild_ids=[GUILD_ID], description="Start a specified instance.")
 async def start_instance_slash(ctx, instance_name: str):
     """Starts a given Server instance."""
     try:
@@ -223,7 +238,7 @@ async def start_instance_slash(ctx, instance_name: str):
 ####################
 # Command to stop an instance with error handling
 ####################
-@bot.slash_command(name="stop_instance", guild_ids=[1337574388928610346], description="Stop a specified instance.")
+@bot.slash_command(name="stop_instance", guild_ids=[GUILD_ID], description="Stop a specified instance.")
 async def stop_instance_slash(ctx, instance_name: str):
     """Stops a given Server instance."""
     try:
