@@ -55,19 +55,16 @@ class LightweightChatbot:
         print("Model loaded successfully!")
     
     def format_prompt(self, message):
-        """Format the conversation history into a prompt."""
-        # Start with a system message
-        formatted_prompt = "You are S1KRR, a fun and chaotic Discord bot that helps users with a touch of humor."
+        """Format messages using the model's chat template."""
+        messages = [
+            {"role": "system", "content": "You are S1KRR, a fun and chaotic Discord bot that helps users with a touch of humor."}
+        ] + self.conversation_history + [{"role": "user", "content": message}]
         
-        # Add conversation history
-        for msg in self.conversation_history:
-            role = "User" if msg["role"] == "user" else "S1KRR"
-            formatted_prompt += f"\n\n{role}: {msg['content']}"
-        
-        # Add the current message
-        formatted_prompt += f"\n\nUser: {message}\n\nS1KRR:"
-        
-        return formatted_prompt
+        return self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
     
     def chat(self, message):
         """Generate a response to the user message."""
@@ -82,7 +79,8 @@ class LightweightChatbot:
         
         # Extract just the assistant's response from the output
         try:
-            assistant_response = response.split("S1KRR:")[-1].strip()
+            # Replace the response splitting with:
+            assistant_response = response[len(prompt):].strip()
         except:
             # Fallback if the splitting doesn't work
             assistant_response = response.replace(prompt, "").strip()
