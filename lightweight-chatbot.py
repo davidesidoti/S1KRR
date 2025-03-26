@@ -102,9 +102,10 @@ def main():
     
     # Try to initialize with different models in order of preference
     models_to_try = [
+        "microsoft/phi-2",                          # Small but capable model
         "TheBloke/TinyLlama-1.1B-Chat-v1.0-GPTQ",  # Very small model (1.1B)
         "TinyLlama/TinyLlama-1.1B-Chat-v1.0",      # Alternative format
-        "microsoft/phi-2",                          # Small but capable model
+        "Qwen/Qwen2-1.5B-Instruct",
     ]
     
     chatbot = None
